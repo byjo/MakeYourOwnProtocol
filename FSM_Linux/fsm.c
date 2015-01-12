@@ -135,6 +135,10 @@ static void send_data(void *p)
 int resend_count = 1;
 static void resend_data(void *p)
 {
+    ((struct p_event*)p)->size = last_send_size;
+    ((struct p_event*)p)->packet.seq = last_send_seq;
+    sprintf(((struct p_event*)p)->packet.data, "%s", last_send_data);
+   
     printf("resend Data to peer '%s' size:%d seq=%d resend_count:%d\n",
         ((struct p_event*)p)->packet.data, ((struct p_event*)p)->size, ((struct p_event*)p)->packet.seq, resend_count++);
     send_packet(F_DATA, (struct p_event *)p, ((struct p_event *)p)->size);
@@ -144,7 +148,7 @@ static void resend_data(void *p)
 static void stop_send(void *p)
 {
     set_timer(0);
-    resend_count=0;
+    resend_count=1;
     printf("Stop Send Data to peer, ACK Arrived seq=%d\n", ((struct p_event*)p)->packet.seq);
 }
 
@@ -198,7 +202,7 @@ loop:
             if (resend_count < MAX_RESEND_COUNT)
                 event.event = TIMEOUT;
             else {
-                resend_count = 0;
+                resend_count = 1;
                 event.event = COUNTOUT;
             }
         } else {
